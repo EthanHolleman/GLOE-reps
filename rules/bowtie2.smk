@@ -12,7 +12,7 @@ rule download_hg_bt_index:
 
 rule map_reads:
     conda: 
-        'envs/bowtie2.yml'
+        '../envs/bowtie2.yml'
     input:
         sample_reads='output/{sample}/trimmomatic/{sample}.trimmed.fastq.gz',
         bt_index='rawdata/bowtie2/hg19_index',
