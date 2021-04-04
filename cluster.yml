@@ -7,3 +7,15 @@ __default__:
   time: "5-0"
   email: 'etholleman@ucdavis.edu'
   mem: "16000"
+
+trimmomatic:
+  time: "8-0"
+  mem: "48000"
+
+indirect_mode:
+  time: "4-0"
+  mem: "64000"
+
+direct_mode:
+  time: "4-0"
+  mem: "64000"
