@@ -44,7 +44,7 @@ rule trim_bam_low_qual_alignments:
 
 rule trim_bam_low_qual_alignments_footloop_only:
     input:
-        footloop_amplicons='resources/footprinted_sites.bed'
+        footloop_amplicons='resources/footprinted_sites.bed',
         sorted_bam='output/{sample}/mapped/{sample}.sorted.bam'
     output:
         temp('output/{sample}/mapped/{sample}.trim.footloop.bam')
