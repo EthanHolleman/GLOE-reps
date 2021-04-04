@@ -5,6 +5,11 @@
 # datafiles
 rawdata/
 output/
+slurm/
+
+# Logs
+
+Logs/
 
 
 # Byte-compiled / optimized / DLL files
