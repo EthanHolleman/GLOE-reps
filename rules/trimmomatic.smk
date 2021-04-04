@@ -1,13 +1,4 @@
 
-rule download_primer_file:
-    output:
-        'rawdata/primers/TruSeq3-SE.fa'
-    shell:'''
-    curl https://raw.githubusercontent.com/timflutre/trimmomatic/master/adapters/TruSeq3-SE.fa \
-    -o {output}
-    '''
-
-
 rule trimmomatic:
     conda: 
         '../envs/trimmomatic.yml'
