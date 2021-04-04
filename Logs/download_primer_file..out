@@ -1,24 +1,0 @@
-Building DAG of jobs...
-Using shell: /bin/bash
-Provided cores: 8
-Rules claiming more threads will be scaled down.
-Job counts:
-	count	jobs
-	1	download_primer_file
-	1
-Select jobs to execute...
-
-[Sat Apr  3 17:46:47 2021]
-rule download_primer_file:
-    output: rawdata/primers/TruSeq3-SE.fa
-    jobid: 0
-
-
-    curl https://raw.githubusercontent.com/timflutre/trimmomatic/master/adapters/TruSeq3-SE.fa     -o rawdata/primers/TruSeq3-SE.fa
-    
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   119  100   119    0     0    439      0 --:--:-- --:--:-- --:--:--   439
-[Sat Apr  3 17:46:47 2021]
-Finished job 0.
-1 of 1 steps (100%) done
