@@ -48,7 +48,7 @@ rule sort_trimmed_bam:
     input:
         'output/{sample}/mapped/{sample}.trim.bam'
     output:
-        temp('output/{sample}/mapped/{sample}.sorted.trim.bam')
+        'output/{sample}/mapped/{sample}.sorted.trim.bam'
     threads: 16
     params:
         sort='output/alignment/{sample}_trim_temp'
@@ -59,16 +59,31 @@ rule sort_trimmed_bam:
     '''
 
 
-rule bam_to_bed:
-    conda: 
-        '../envs/bedtools.yml'
+# rule bam_to_bed:
+#     conda: 
+#         '../envs/bedtools.yml'
+#     input:
+#         'output/{sample}/mapped/{sample}.sorted.trim.bam'
+#     output:
+#         temp('output/{sample}/mapped/{sample}.sorted.trim.bed')
+#     shell:'''
+#     bedtools bamtobed -i {input} > {output}
+#     '''
+
+# rule remove_low_read_count_breaks:
+#     conda:
+#         '../envs/bedtools.yml'
+
+
+rule read_depth:
     input:
         'output/{sample}/mapped/{sample}.sorted.trim.bam'
     output:
-        temp('output/{sample}/mapped/{sample}.sorted.trim.bed')
+        'output/{sample}/mapped/{sample}.sorted.trim.depth.bed'
     shell:'''
-    bedtools bamtobed -i {input} > {output}
+    samtools depth {input} > {output}
     '''
+
 
 
 
