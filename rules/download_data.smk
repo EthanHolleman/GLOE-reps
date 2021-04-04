@@ -4,21 +4,21 @@ GLOE_SAMPLES = pd.read_table(
     'samples/GLOE_samples.csv', sep=','
 ).set_index('Sample Name', drop=False)
 
+
 # Download GLOE-seq data and process into fastq
 
 rule expand_gloe_samples:
     input:
-        expand('rawdata/GLOE-seq/{sample_name}', sample_name=GLOE_SAMPLES['Sample Name'])
-
+        expand('rawdata/GLOE-seq/{sample_name}.sra', sample_name=GLOE_SAMPLES['Sample Name'])
 
 
 rule download_all_gloe_samples:
     conda:
         '../envs/sra-toolkit.yml'
+    params:
+        sra_accession = lambda wildcards: GLOE_SAMPLES.loc[wildcards.sample_name]['Run'],
     output:
        temp('rawdata/GLOE-seq/{sample_name}.sra')
-    params:
-        sra_accession = lambda wildcards: GLOE_SAMPLES.loc[wildcards.sample_name]['Run']
     shell:'''
     prefetch {params.sra_accession} --output-file {output}
     '''
