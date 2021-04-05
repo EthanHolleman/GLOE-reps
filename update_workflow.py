@@ -19,7 +19,7 @@ with open('README.md', 'r+') as readme:
     readme.seek(0)
     if os.path.exists(image_path) and image_path not in content:
         readme.write(
-            f'\n# Current Workflow\n![]({image_path})'
+            content + f'\n# Current Workflow\n![]({image_path})'
         )
         os.system(f'git add README.md {image_path}')
         os.system('git commit -m "update workflow image"')
