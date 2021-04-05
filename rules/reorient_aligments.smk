@@ -5,9 +5,9 @@
 
 rule direct_mode:
     input:
-        'output/{sample}/mapped/{sample}.sorted.trim.bed'
+        'output/{sample}/process_alignment/{sample}.sorted.trim.{region}.bed'
     output:
-        sites='output/{sample}/direct/{sample}.sites.direct.trim.bed'
+        sites=temp('output/{sample}/reorient_alignments/direct/{sample}.direct.trim.{region}.bed')
     params:
         index_dir='output/{sample}/direct'
     shell:'''
@@ -19,9 +19,9 @@ rule direct_mode:
 
 rule indirect_mode:
     input:
-        'output/{sample}/mapped/{sample}.sorted.trim.bed'
+        'output/{sample}/process_alignment/{sample}.sorted.trim.{region}.bed'
     output:
-        sites='output/{sample}/indirect/{sample}.sites.indirect.trim.bed'
+        sites=temp('output/{sample}/reorient_alignments/indirect/{sample}.indirect.trim.{region}.bed')
     params:
         index_dir='output/{sample}/indirect'
     shell:"""
@@ -33,9 +33,9 @@ rule indirect_mode:
 
 rule get_second_column:
     input:
-        'output/{sample}/{mode}/{sample}.sites.{mode}.sorted.trim.bed'
+        'output/{sample}/reorient_alignments/{mode}/{sample}.{mode}.trim.{region}.bed'
     output:
-        temp('output/{sample}/{mode}/{sample}.sites.{mode}.sorted.col2.trim.bed')
+        temp('output/{sample}/reorient_alignments/{mode}/{sample}.{mode}.sorted.col2.trim.{region}.bed')
     shell:"""
     awk '($2 >= 0)' {input} > {output}
     """
@@ -43,30 +43,30 @@ rule get_second_column:
 
 rule perl_mode_big_awk:
     input:
-        'output/{sample}/{mode}/{sample}.sites.{mode}.sorted.col2.trim.bed'
+        'output/{sample}/reorient_alignments/{mode}/{sample}.{mode}.sorted.col2.trim.{region}.bed'
     output:
-        'output/{sample}/{mode}/{sample}.{mode}.sorted.trim.bed'
+        'output/{sample}/reorient_alignments/{mode}/{sample}.{mode}.sorted.trim.{region}.bed'
     shell:"""
     awk '{{print $1 "\t" $2 "\t" $3 "\t" $4 "\t" 0 "\t" $6}}'  {input} > {output}
     """
 
 
-rule seperate_forward_strand:
-    input:
-        'output/{sample}/{mode}/{sample}.{mode}.sorted.trim.bed'
-    output:
-        'output/{sample}/{mode}/{sample}.fwd.{mode}.sorted.trim.bed'
+# rule seperate_forward_strand:
+#     input:
+#         'output/{sample}/{mode}/{sample}.{mode}.sorted.trim.bed'
+#     output:
+#         'output/{sample}/{mode}/{sample}.fwd.{mode}.sorted.trim.bed'
     
-    shell:'''
-    grep "+" {input} > {output}
-    '''
+#     shell:'''
+#     grep "+" {input} > {output}
+#     '''
 
 
-rule seperate_reverse_strand:
-    input:
-        'output/{sample}/{mode}/{sample}.{mode}.sorted.trim.bed'
-    output:
-        'output/{sample}/{mode}/{sample}.rev.{mode}.sorted.trim.bed'
-    shell:'''
-    grep "-" {input} > {output}
-    '''
+# rule seperate_reverse_strand:
+#     input:
+#         'output/{sample}/{mode}/{sample}.{mode}.sorted.trim.bed'
+#     output:
+#         'output/{sample}/{mode}/{sample}.rev.{mode}.sorted.trim.bed'
+#     shell:'''
+#     grep "-" {input} > {output}
+#     '''

@@ -17,7 +17,7 @@ rule map_reads:
         sample_reads='output/{sample}/trimmomatic/{sample}.trimmed.fastq.gz',
         bt_index='rawdata/bowtie2/hg19_index',
     output:
-        temp('output/{sample}/mapped/{sample}.sam')
+        temp('output/{sample}/bowtie2/{sample}.sam')
     threads: 12
     shell:'''
     bowtie2 -q -x {input.bt_index}/hg19 -U {input.sample_reads} \
