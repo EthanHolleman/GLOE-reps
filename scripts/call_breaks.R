@@ -1,7 +1,9 @@
 
+message("heloo")
+
 # https://stackoverflow.com/questions/12626637/read-a-text-file-in-r-line-by-line
 read_bed <- function(filepath){
-
+    message('REading bed')
     read_depths <- list()
     i <- 1
     con <- file(filepath, "r")
@@ -10,17 +12,21 @@ read_bed <- function(filepath){
         if ( length(line) == 0 ) {
         break
         }
-        read_depth[[i]] <- line$V5  # score which should be number aligned reads
+        read_depths[[i]] <- line$V5  # score which should be number aligned reads
     }
     close(con)
-    }
     return(read_depths)
 }
 
+message("2")
 
-read_bed_line <- function(connection){
+read_bed_line <- function(con){
 
-    line <- read.delim(con, nrows=1, header=F)
+    line <- tryCatch(
+            read.delim(con, nrows=1, header=F, sep='\t'),
+            error=function(e) c()
+    )
+   
     return(line)
 
 }
@@ -29,7 +35,7 @@ read_bed_line <- function(connection){
 # of reads and write to a new file
 trim_bed <- function(input_filepath, output_filepath, read_depths, min_sds=1){
 
-
+    sd_depth <- sd(unlist(read_depths))
     min_depth <- sd_depth * min_sds
     output_con <- file(output_filepath, "w")
     input_con <- file(input_filepath, "r")
@@ -37,7 +43,8 @@ trim_bed <- function(input_filepath, output_filepath, read_depths, min_sds=1){
 
         line <- read_bed_line(input_con)
         if (length(line) > 0){
-            if (line$V5 >= min_depth){
+            message(line)
+            if (line[length(line)] >= min_depth){
             write.table(output_con, line, header=F, 
                         quote=F, col.names=F, row.names=F
                         )
@@ -55,16 +62,19 @@ main <- function(){
     args <- commandArgs(trailingOnly=TRUE)
     input.bed <- args[1]
     output.bed <- args[2]
+    message(input.bed)
     if (length(args) == 3){
         min_sds <- as.numberic(args[3])
     }else{
         min_sds <- 1
     }
     read_depths <- read_bed(input.bed)
+    message('Trimming bed file')
     trim_bed <- trim_bed(input.bed, output.bed, read_depths, min_sds)
 }
 
 if (! interactive()){
+    message("hello")
     main()
 }
 
