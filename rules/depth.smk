@@ -11,7 +11,7 @@ rule bed_to_bam:
         temp('output/{sample}/depth/{mode}/{sample}.{mode}.sorted.trim.{region}.bam')
     shell:'''
     bedtools bedtobam -i {input.bed} -g {input.genome}/{params.index_name} > \
-    output
+    {output}
     '''
 
 rule read_depth:
