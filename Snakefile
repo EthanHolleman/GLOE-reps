@@ -3,6 +3,8 @@ include: "rules/bowtie2.smk"
 include: "rules/trimmomatic.smk"
 include: "rules/process_alignment.smk"
 include: "rules/compare_replicates.smk"
+include: "rules/reorient_aligments.smk"
+include: "rules/depth.smk"
 
 import itertools
 
@@ -43,5 +45,10 @@ rule all:
             sample=GLOE_SAMPLES['Sample Name']
         ),
         #replicate depth comparisons
-        expand(replicate_comparison_targets)
+        expand(
+            'output/{sample}/depth/{mode}/{sample}.{mode}.sorted.trim.{region}.depth.deep.bed',
+            sample=GLOE_SAMPLES['Sample Name'], region=['all', 'footloop'],
+            mode=['direct', 'indirect']
+        )
+
 
