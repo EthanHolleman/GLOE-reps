@@ -51,22 +51,22 @@ rule perl_mode_big_awk:
     """
 
 
-# rule seperate_forward_strand:
-#     input:
-#         'output/{sample}/{mode}/{sample}.{mode}.sorted.trim.bed'
-#     output:
-#         'output/{sample}/{mode}/{sample}.fwd.{mode}.sorted.trim.bed'
+rule seperate_forward_strand:
+    input:
+        'output/{sample}/reorient_alignments/{mode}/{sample}.{mode}.sorted.trim.{region}.bed'
+    output:
+        'output/{sample}/reorient_alignments/{mode}/{sample}.{mode}.sorted.trim.{region}.fwd.bed'
     
-#     shell:'''
-#     grep "+" {input} > {output}
-#     '''
+    shell:'''
+    grep "+" {input} > {output}
+    '''
 
 
-# rule seperate_reverse_strand:
-#     input:
-#         'output/{sample}/{mode}/{sample}.{mode}.sorted.trim.bed'
-#     output:
-#         'output/{sample}/{mode}/{sample}.rev.{mode}.sorted.trim.bed'
-#     shell:'''
-#     grep "-" {input} > {output}
-#     '''
+rule seperate_reverse_strand:
+    input:
+        'output/{sample}/reorient_alignments/{mode}/{sample}.{mode}.sorted.trim.{region}.bed'
+    output:
+        'output/{sample}/reorient_alignments/{mode}/{sample}.{mode}.sorted.trim.{region}.rev.bed'
+    shell:'''
+    grep "-" {input} > {output}
+    '''

@@ -36,7 +36,7 @@ rule trim_bam_low_qual_alignments_all:
     input:
         'output/{sample}/process_alignment/{sample}.sorted.bam'
     output:
-        temp('output/{sample}/process_alignment/{sample}.trim.all.bam')
+        'output/{sample}/process_alignment/trim/{sample}.trim.all.bam'
     shell:'''
     samtools view -q 30 -bhu -o {output} {input}
     '''
@@ -47,7 +47,7 @@ rule trim_bam_low_qual_alignments_footloop_only:
         footloop_amplicons='resources/footprinted_sites.bed',
         sorted_bam='output/{sample}/process_alignment/{sample}.sorted.bam'
     output:
-        temp('output/{sample}/process_alignment/{sample}.trim.footloop.bam')
+        'output/{sample}/process_alignment/{sample}.trim.footloop.bam'
     shell:'''
     samtools view -q 30 -L {input.footloop_amplicons} -bhu -o {output} \
     {input.sorted_bam}
@@ -63,7 +63,7 @@ rule sort_trimmed_bam:
         temp('output/{sample}/process_alignment/{sample}.sorted.trim.{region}.bam')
     threads: 16
     params:
-        sort='output/alignment/{sample}.{region}.trim.temp'
+        sort='output/{sample}/alignment/{sample}.{region}.trim.temp'
     shell:'''
     mkdir --parents {params.sort}
     samtools sort -O bam -T {params.sort} --threads {threads} -o {output} {input}

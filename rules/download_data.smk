@@ -43,6 +43,13 @@ rule download_primer_file:
     -o {output}
     '''
 
+rule download_hg19_chr_sizes:
+    output:
+        'rawdata/hg19/hg19.chrom.sizes'
+    shell:'''
+    curl -L http://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/hg19.chrom.sizes -o {output}
+    '''
+
 
 
 
