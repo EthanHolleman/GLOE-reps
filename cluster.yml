@@ -19,3 +19,13 @@ indirect_mode:
 direct_mode:
   time: "4-0"
   mem: "64000"
+
+bed_to_bam:
+  mem: "64000"
+
+sort_bam_for_read_depth:
+  mem: "64000"
+
+remove_shallow_breaks:
+  parition: bigmemm
+  mem: "100000"
