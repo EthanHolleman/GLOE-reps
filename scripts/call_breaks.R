@@ -1,81 +1,66 @@
-
-message("heloo")
+options(scipen=999)
 
 # https://stackoverflow.com/questions/12626637/read-a-text-file-in-r-line-by-line
 read_bed <- function(filepath){
-    message('REading bed')
-    read_depths <- list()
-    i <- 1
-    con <- file(filepath, "r")
-    while ( TRUE ) {
-        line <- read_bed_line(con)
-        if ( length(line) == 0 ) {
-        break
-        }
-        read_depths[[i]] <- line$V5  # score which should be number aligned reads
-    }
-    close(con)
-    return(read_depths)
-}
-
-message("2")
-
-read_bed_line <- function(con){
-
-    line <- tryCatch(
-            read.delim(con, nrows=1, header=F, sep='\t'),
-            error=function(e) c()
-    )
-   
-    return(line)
-
+  bed.df <- as.data.frame(read.delim(filepath, header = F))
+  colnames(bed.df) <- c('chr', 'end_position', 'depth')
+  bed.df
 }
 
 # Remove reads from bed file that have fewer than min_sds * sd of number
 # of reads and write to a new file
-trim_bed <- function(input_filepath, output_filepath, read_depths, min_sds=1){
-
-    sd_depth <- sd(unlist(read_depths))
-    min_depth <- sd_depth * min_sds
-    output_con <- file(output_filepath, "w")
-    input_con <- file(input_filepath, "r")
-    while (TRUE){
-
-        line <- read_bed_line(input_con)
-        if (length(line) > 0){
-            message(line)
-            if (line[length(line)] >= min_depth){
-            write.table(output_con, line, header=F, 
-                        quote=F, col.names=F, row.names=F
-                        )
-            }
-        }else{
-            break
-        }
-
-    }
-
+trim_coverage <- function(read_depths.df){
+  
+  sd_depth <- sd(read_depths.df$depth)
+  min_depth <- mean(read_depths.df$depth) - sd_depth
+  if (min_depth < 100){
+    min_depth <- 100
+  }
+  subset(read_depths.df, depth >= min_depth)
+  
 }
 
-main <- function(){
 
-    args <- commandArgs(trailingOnly=TRUE)
-    input.bed <- args[1]
-    output.bed <- args[2]
-    message(input.bed)
-    if (length(args) == 3){
-        min_sds <- as.numberic(args[3])
-    }else{
-        min_sds <- 1
-    }
-    read_depths <- read_bed(input.bed)
-    message('Trimming bed file')
-    trim_bed <- trim_bed(input.bed, output.bed, read_depths, min_sds)
+convert_to_bed <- function(read_depths.df, strand){
+  # the coverage file will only have the base position. In bed file this is
+  # the end position so need to readd the start position
+  # add a name as well
+  read_depths.df$name <- paste(rep('depth', nrow(read_depths.df)), 1:nrow(read_depths.df), sep='_')
+  read_depths.df$start_position <- read_depths.df$end_position - 1
+  read_depths.df$strand <- rep(strand, nrow(read_depths.df))
+  read_depths.df <- read_depths.df[, c('chr', 'start_position', 'end_position', 'name', 'depth', 'strand')]
+  read_depths.df
+  
+  
+}
+
+remove_scaffolds <- function(read_depths.df){
+  names <- c(1:22, 'X', 'Y')
+  chrs <- paste(rep('chr', length(names)), names, sep='')
+  read_depths.df <- subset(read_depths.df, read_depths.df$chr %in% chrs)
+  read_depths.df
+}
+
+
+main <- function(){
+  
+  args <- commandArgs(trailingOnly=TRUE)
+  input.bed <- args[1]
+  output.bed <- args[2]
+  strand <- args[3]
+  message(input.bed)
+  read_depths.df <- read_bed(input.bed)
+  read_depths.df.trim <- trim_coverage(read_depths.df)
+  read_depths.df.trim <- convert_to_bed(read_depths.df.trim, strand)
+  read_depths.df.trim <- remove_scaffolds(read_depths.df.trim)
+  write.table(read_depths.df.trim, output.bed, col.names = F, 
+              row.names = F, quote = F, sep='\t')
+  message('Done')
+  
 }
 
 if (! interactive()){
-    message("hello")
-    main()
+  main()
 }
 
 

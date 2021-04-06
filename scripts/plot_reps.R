@@ -4,6 +4,9 @@ library(ggpubr)
 library(RColorBrewer)
 
 
+# now we are also having to deal with forward and reverse strands as well
+
+
 extract_replicates_from_filepath <- function(file.path){
   
   file.path.split <- unlist(strsplit(file.path, "/"))
