@@ -21,7 +21,7 @@ rule call_peaks:
 rule remove_called_peaks:
     input:
         peaks='output/call_peaks/{treatment}.vs.{control}_macs2/{mode}/{region}/{strand}/macs2_peak_call_summits.bed',
-        treatment_bed='output/{treatment}/reorient_alignments/{mode}/{strand}/seperated.{region}.bed'
+        treatment_bed='output/{treatment}/depth/{mode}/deep/{region}.{strand}.sorted.bed'
     output:
         'output/{treatment}/ok_free/{mode}/{strand}/ok_free.control_{control}.{region}.bed'
     params:
