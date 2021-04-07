@@ -1,3 +1,4 @@
+include: "rules/call_peaks.smk"
 include: "rules/download_data.smk"
 include: "rules/bowtie2.smk"
 include: "rules/trimmomatic.smk"
@@ -6,49 +7,55 @@ include: "rules/compare_replicates.smk"
 include: "rules/reorient_aligments.smk"
 include: "rules/depth.smk"
 
+wildcard_constraints:
+    strand="fwd|rev",
+    mode="indirect|direct"
+
+
 import itertools
+
+MODES = ['direct']
+STRANDS = ['fwd', 'rev']
+REGIONS = ['footloop', 'all']
 
 
 def group_replicates(samples):
     all_samples = []
     for _, sample in samples.iterrows():
         modification = sample['modification']
-        replicates = samples.loc[GLOE_SAMPLES['modification'] == modification]
+        replicates = samples.loc[samples['modification'] == modification]
         replicates = tuple([rep['Sample Name'] for _, rep in replicates.iterrows()])
         all_samples.append(replicates)
     return all_samples
 
 
-def make_replicate_key_dict(replicate_groups):
-    permuted_groups = []
-    for each_rep_group in replicate_groups:
-        permute = itertools.permutations(each_rep_group)
-        permuted_groups += permute
-    return dict(permuted_groups)
+replicate_groups = group_replicates(GLOE_SAMPLES)
+paired_replicates_boxplot_output = expand(
+    'output/compare_replicates/{rep[0]}-{rep[1]}/plots/closest/{mode}/{strand}/boxplot_{region}.png',
+    rep=replicate_groups, allow_missing=True
+)
+
+treatment=list(GLOE_SAMPLES.loc[GLOE_SAMPLES['modification'] == 'siRNA LIG1']['Sample Name'])
+control=list(GLOE_SAMPLES.loc[GLOE_SAMPLES['modification'] == 'siRNA control']['Sample Name'])
+macs2_peaks = expand(
+    'output/call_peaks/{treatment}.vs.{control}_macs2/{mode}/{region}/{strand}',
+    treatment=treatment, control=control,
+    mode=MODES, strand=STRANDS, region=REGIONS,
+    allow_missing=True
+)
 
 
-group_reps = group_replicates(GLOE_SAMPLES)
-rep_dict = make_replicate_key_dict(group_reps)
-replicate_output_path = 'output/compare_replicates/{}-{}/closest.footloop.bed'
-replicate_comparison_targets = [
-    replicate_output_path.format(key, value) for key, value in rep_dict.items()
-    ]
+
 
 
 rule all:
     input:
-        # Download all GLOE-seq reads from SRA
-        expand('rawdata/GLOE-seq/{sample_name}.sra', sample_name=GLOE_SAMPLES['Sample Name']),
-        # Trimm GLOE reads
-        expand(
-            'output/{sample}/trimmomatic/{sample}.trimmed.fastq.gz', 
-            sample=GLOE_SAMPLES['Sample Name']
-        ),
-        #replicate depth comparisons
-        expand(
-            'output/{sample}/depth/{mode}/{sample}.{mode}.sorted.trim.{region}.depth.deep.bed',
-            sample=GLOE_SAMPLES['Sample Name'], region=['all', 'footloop'],
-            mode=['direct', 'indirect']
-        )
+        macs2_peaks
+        #"1"
+        # expand(
+        #     'output/{sample}/depth/{mode}/bam/{region}.{strand}.sorted.bam',
+        #     sample=treatment, mode=MODES, region=REGIONS, strand=STRANDS
+        # )
+
 
 
