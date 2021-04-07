@@ -1,26 +1,34 @@
-# rule call_peaks:
-#     conda:
-#         '../envs/macs2.yml'
-#     input:
-#     # output/{sample}/reorient_alignments/{mode}/{sample}.{mode}.sorted.trim.{region}.fwd.bed
-#         treatment='output/{treatment}/reorient_alignments/{mode}/{strand}/seperated.{region}.bed',
-#         control='output/{control}/reorient_alignments/{mode}/{strand}/seperated.{region}.bed'
+rule call_peaks:
+    conda:
+        '../envs/macs2.yml'
+    input:
+    # output/{sample}/reorient_alignments/{mode}/{sample}.{mode}.sorted.trim.{region}.fwd.bed
+        treatment='output/{treatment}/reorient_alignments/{mode}/{strand}/seperated.{region}.bed',
+        control='output/{control}/reorient_alignments/{mode}/{strand}/seperated.{region}.bed'
 
-#     output:
-#         'output/call_peaks/{sample_1}.vs.{sample_2}_macs2/{mode}/{region}/{strand}'
-#     params:
-#         experiment_name='{treatment}.vs.{control}.{mode}.{strand}.{region}_macs2'
-#     shell:'''
-#     macs2 callpeak -t {treatment} -c {control} -n {params.experiment_name} \
-#     --outdir {output} -m 5 50 -g 1.20E+07 --bw 200 --format BED --extsize 1 \
-#     --nomodel --shift 0 --keep-dup
-#     '''
+    output:
+        'output/call_peaks/{treatment}.vs.{control}_macs2/{mode}/{region}/{strand}/macs2_peak_call_summits.bed'
+    params:
+        experiment_name='macs2_peak_call',
+        out_dir='output/call_peaks/{treatment}.vs.{control}_macs2/{mode}/{region}/{strand}'
+    shell:'''
+    mkdir -p {params.out_dir}
+    macs2 callpeak -t {input.treatment} -c {input.control} -n {params.experiment_name} \
+    --outdir {params.out_dir} -m 5 50 -g 1.20E+07 --bw 200 --format BED --extsize 1 \
+    --nomodel --shift 0 --keep-dup all
+    '''
 
-# //vars for task macs2 from catalog ChIPseq, version 1
-# MACS2_TARGETS="targets.txt" // targets file describing the samples
-# MACS2_MFOLD="-m 5 50"	// range of enrichment ratio (default: 5,50)
-# MACS2_GSIZE="-g " + ESSENTIAL_MACS2_GSIZE // the mappable genome size
-# MACS2_BWIDTH="--bw " + Integer.toString(ESSENTIAL_FRAGLEN)	  // bandwidth use for model building
-# MACS2_INPUT=BED // where the bed files are stored
-# MACS2_FORMAT="--format BED"
-# MACS2_EXTRA="--extsize 1 --nomodel --shift 0 --keep-dup " + ESSENTIAL_DUP	
+rule remove_called_peaks:
+    input:
+        peaks='output/call_peaks/{treatment}.vs.{control}_macs2/{mode}/{region}/{strand}/macs2_peak_call_summits.bed',
+        treatment_bed='output/{treatment}/reorient_alignments/{mode}/{strand}/seperated.{region}.bed'
+    output:
+        'output/{treatment}/ok_free/{mode}/{strand}/ok_free.control_{control}.{region}.bed'
+    params:
+        out_dir='output/{treatment}/ok_free/{mode}/{strand}'
+    shell:'''
+    mkdir -p {params.out_dir}
+    bedtools intersect -v -a {input.treatment_bed} -b {input.peaks} > {output}
+    '''
+
+    # Why fos and jun were targeted? These 

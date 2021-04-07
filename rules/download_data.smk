@@ -1,6 +1,6 @@
 import pandas as pd
 
-GLOE_SAMPLES = pd.read_table(
+GLOE_SAMPLES = pd.read_csv(
     'samples/GLOE_samples.csv', sep=','
 ).set_index('Sample Name', drop=False)
 

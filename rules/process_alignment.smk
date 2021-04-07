@@ -82,24 +82,6 @@ rule bam_to_bed:
     bedtools bamtobed -i {input} > {output}
     '''
 
-rule call_peaks:
-    conda:
-        '../envs/macs2.yml'
-    input:
-    # output/{sample}/reorient_alignments/{mode}/{sample}.{mode}.sorted.trim.{region}.fwd.bed
-        treatment='output/{treatment}/reorient_alignments/{mode}/{strand}/seperated.{region}.bed',
-        control='output/{control}/reorient_alignments/{mode}/{strand}/seperated.{region}.bed'
-
-    output:
-        directory('output/call_peaks/{treatment}.vs.{control}_macs2/{mode}/{region}/{strand}')
-    params:
-        experiment_name='{treatment}.vs.{control}.{mode}.{strand}.{region}_macs2',
-    shell:'''
-    mkdir -p {output}
-    macs2 callpeak -t {treatment} -c {control} -n {params.experiment_name} \
-    --outdir {output} -m 5 50 -g 1.20E+07 --bw 200 --format BED --extsize 1 \
-    --nomodel --shift 0 --keep-dup
-    '''
 
 # rule remove_low_read_count_breaks:
 #     conda:
