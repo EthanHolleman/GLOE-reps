@@ -29,3 +29,7 @@ sort_bam_for_read_depth:
 remove_shallow_breaks:
   parition: bigmemm
   mem: "100000"
+
+call_peaks:
+  mem: "64000"
+  time: "6-0"
