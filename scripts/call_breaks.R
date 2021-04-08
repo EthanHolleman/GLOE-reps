@@ -12,10 +12,10 @@ read_bed <- function(filepath){
 trim_coverage <- function(read_depths.df){
   
   sd_depth <- sd(read_depths.df$depth)
-  min_depth <- mean(read_depths.df$depth) - sd_depth
-  if (min_depth < 100){
-    min_depth <- 100
-  }
+  min_depth <- median(read_depths.df$depth) - median(read_depths.df$depth) * 0.75
+  # if (min_depth < 100){
+  #   min_depth <- 100
+  # }
   subset(read_depths.df, depth >= min_depth)
   
 }
@@ -25,10 +25,16 @@ convert_to_bed <- function(read_depths.df, strand){
   # the coverage file will only have the base position. In bed file this is
   # the end position so need to readd the start position
   # add a name as well
+  message(0)
+  print(dim(read_depths.df))
   read_depths.df$name <- paste(rep('depth', nrow(read_depths.df)), 1:nrow(read_depths.df), sep='_')
+  message(1)
   read_depths.df$start_position <- read_depths.df$end_position - 1
+  message(2)
   read_depths.df$strand <- rep(strand, nrow(read_depths.df))
+  message(3)
   read_depths.df <- read_depths.df[, c('chr', 'start_position', 'end_position', 'name', 'depth', 'strand')]
+  message(4)
   read_depths.df
   
   
@@ -50,11 +56,16 @@ main <- function(){
   strand <- args[3]
   message(input.bed)
   read_depths.df <- read_bed(input.bed)
+  message('Read file')
   read_depths.df.trim <- trim_coverage(read_depths.df)
+  message('Trimmed coverage')
   read_depths.df.trim <- convert_to_bed(read_depths.df.trim, strand)
+  message('Converted to bed')
   read_depths.df.trim <- remove_scaffolds(read_depths.df.trim)
+  message('Removed scaffolds')
   write.table(read_depths.df.trim, output.bed, col.names = F, 
               row.names = F, quote = F, sep='\t')
+  message('Wrote bed file')
   message('Done')
   
 }

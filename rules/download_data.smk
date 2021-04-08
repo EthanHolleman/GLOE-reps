@@ -51,5 +51,14 @@ rule download_hg19_chr_sizes:
     '''
 
 
+# Download footloop data
+
+rule download_footloop_all:
+    output:
+        'rawdata/footloop/footloop_all.bed'
+    shell:'''
+    curl -L "https://genome.ucsc.edu/cgi-bin/hgTables?hgsid=1079385889_dXqdbBP5Hsal2siu4fVmefmsWOgX&boolshad.hgta_printCustomTrackHeaders=0&hgta_ctName=tb_ct_footLoopPeakALL_41&hgta_ctDesc=table+browser+query+on+ct_footLoopPeakALL_41&hgta_ctVis=pack&hgta_ctUrl=&fbQual=whole&fbUpBases=200&fbDownBases=200&hgta_doGetBed=get+BED" -o {output}
+    '''
+
 
 
