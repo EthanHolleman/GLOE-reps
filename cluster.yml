@@ -27,8 +27,8 @@ sort_bam_for_read_depth:
   mem: "64000"
 
 remove_shallow_breaks:
-  parition: bigmemm
-  mem: "100000"
+  mem: "64000"
+  cpus: "1"
 
 call_peaks:
   mem: "64000"
