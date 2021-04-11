@@ -1,6 +1,5 @@
 
 
-
 rule seperate_footloop_strands:
     input:
         'rawdata/footloop/footloop_all.bed'
@@ -42,11 +41,11 @@ rule closest_footloop_swapped_mac_calls:
         '../envs/bedtools.yml'
     input:
         footloop='output/truncated_footloop/footloop_all.{strand}.trunc.sorted.bed',
-        breaks='output/call_peaks/swapped/{control}.vs.{treatment}_macs2/{mode}/all/{strand}/macs2_peak_call_summits.bed'
+        breaks='output/call_peaks/swapped/{control}.vs.{treatment_a}_{treatment_b}_macs2/{mode}/{region}/fwd/macs2_peak_call_summits.bed'
     output:
-        'output/compare_footloop/closest/{control}.vs.{treatment}_macs2/footloop_closest.{mode}.{strand}.bed'
+        'output/compare_footloop/closest/{control}.vs.{treatment_a}_{treatment_b}_macs2/footloop_closest.{mode}.{region}.{strand}.bed'
     params:
-        out_dir='output/compare_footloop/closest/{control}.vs.{treatment}_macs2'
+        out_dir='output/compare_footloop/closest/{control}.vs.{treatment_a}_{treatment_b}_macs2'
     shell:'''
     mkdir -p {params.out_dir}
     bedtools closest -t first -D a -a {input.footloop} -b {input.breaks} > {output}
@@ -57,10 +56,10 @@ rule plot_closest_footloop_swapped_mac_calls:
     conda:
         '../envs/R.yml'
     input:
-        fwd='output/compare_footloop/closest/{control}.vs.{treatment}_macs2/footloop_closest.{mode}.fwd.bed',
-        rev='output/compare_footloop/closest/{control}.vs.{treatment}_macs2/footloop_closest.{mode}.rev.bed'
+        fwd='output/compare_footloop/closest/{control}.vs.{treatment_a}_{treatment_b}_macs2/footloop_closest.{mode}.{region}.fwd.bed',
+        rev='output/compare_footloop/closest/{control}.vs.{treatment_a}_{treatment_b}_macs2/footloop_closest.{mode}.{region}.rev.bed'
     output:
-        'output/compare_footloop/closest/{control}.vs.{treatment}_macs2/plots/{control}.vs.{treatment}.{mode}.png'
+        'output/call_peaks/swapped/{control}.vs.{treatment_a}_{treatment_b}_macs2/plots/{region}.{control}.vs.{treatment_a}_{treatment_b}.{mode}.png'
     shell:'''
     Rscript scripts/plt_called_peaks_footloop_dists.R {input.fwd} {input.rev} {output}
     '''

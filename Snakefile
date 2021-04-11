@@ -8,6 +8,7 @@ include: "rules/reorient_aligments.smk"
 include: "rules/depth.smk"
 include: "rules/remove_okazaki.smk"
 include: "rules/compare_footloop.smk"
+include: "rules/metaplot.smk"
 
 
 
@@ -22,7 +23,9 @@ import itertools
 MODES = ['direct']
 STRANDS = ['fwd', 'rev']
 REGIONS = ['footloop', 'all']
+PEAK_CALL_METHODS = ['normal', 'swapped']
 
+# swapped peak calling is calling peaks with the control as the treatment
 
 def group_replicates(samples):
     all_samples = []
@@ -69,9 +72,34 @@ closest_footloops_swapped_peaks = expand(
 )
 
 closest_footloops_swapped_peaks_plots = expand(
-    'output/compare_footloop/closest/{control}.vs.{treatment}_macs2/plots/{control}.vs.{treatment}.{mode}.png',
-    treatment=treatment, strand=STRANDS, region=REGIONS, mode=MODES,
+    'output/call_peaks/swapped/{control}.vs.{treatment_a}_{treatment_b}_macs2/plots/{region}.{control}.vs.{treatment_a}_{treatment_b}.{mode}.png',
+    treatment_a=treatment, treatment_b=treatment, strand=STRANDS, region=REGIONS, mode=MODES,
     control=control
+)
+
+closest_footloops_swapped_peaks_multi_treatment = expand(
+    'output/call_peaks/swapped/{control}.vs.{treatment_a}_{treatment_b}_macs2/{mode}/{region}/{strand}/macs2_peak_call_summits.bed',
+    treatment_a=treatment, treatment_b=treatment, strand=STRANDS, region=REGIONS, mode=MODES,
+    control=control
+)
+
+metaplot_intersection_files = expand(
+    'output/metaplot/intersection/{peak_call_method}/{control}.vs._{treatment_a}_{treatment_b}.{mode}.all.{strand}.intersect.bed',
+    treatment_a=treatment, treatment_b=treatment, strand=STRANDS, region=REGIONS, mode=MODES,
+    control=control, peak_call_method=PEAK_CALL_METHODS
+)
+
+metaplot_metabed_files = expand(
+    'output/metaplot/metabed/{peak_call_method}/{control}.vs._{treatment_a}_{treatment_b}.{mode}.all.{strand}.meta.bed',
+    treatment_a=treatment, treatment_b=treatment, strand=STRANDS, mode=MODES,
+    control=control, peak_call_method=PEAK_CALL_METHODS
+
+)
+
+metaplots = expand(
+    'output/metaplot/plots/{peak_call_method}/{control}.vs._{treatment_a}_{treatment_b}.{mode}.all.{strand}.meta.png',
+    treatment_a=treatment, treatment_b=treatment, strand=STRANDS, mode=MODES,
+    control=control, peak_call_method=PEAK_CALL_METHODS, 
 )
 
 
@@ -82,7 +110,11 @@ rule all:
         #macs2_peaks_swap,
         #macs2_peaks,
         #closest_footloops_swapped_peaks,
-        closest_footloops_swapped_peaks_plots
+        #closest_footloops_swapped_peaks_plots
+        #metaplot_intersection_files
+        #metaplot_metabed_files
+        metaplots
+        #closest_footloops_swapped_peaks_multi_treatment
         #ok_free_bed_files
         #"1"
         # expand(
