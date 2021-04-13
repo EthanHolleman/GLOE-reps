@@ -33,3 +33,8 @@ remove_shallow_breaks:
 call_peaks:
   mem: "64000"
   time: "6-0"
+
+sort_bedgraph:
+  mem: "64000"
+  time: "1-0"
+  
