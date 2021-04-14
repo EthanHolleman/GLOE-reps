@@ -60,7 +60,7 @@ rule sort_trimmed_bam:
     input:
         'output/{sample}/process_alignment/trim_low_qual/{region}.bam'
     output:
-        temp('output/{sample}/process_alignment/sorted/trim.{region}.bam')
+        'output/{sample}/process_alignment/sorted/trim.{region}.bam'
     threads: 16
     params:
         sort='output/{sample}/alignment/{sample}.{region}.trim.temp'

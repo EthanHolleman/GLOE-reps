@@ -52,6 +52,39 @@ rule sort_stranded_summits:
 #     bedGraphToBigWig {input.bedgraph} {input.chromSizes} {output} && [[ -s {output} ]]
 #     '''
 
+rule multibamsummary:
+    conda:
+        '../envs/deeptools.yml'
+    input:
+        rep_a='output/{sample_a}/process_alignment/sorted/trim.{region}.bam',
+        rep_b='output/{sample_b}/process_alignment/sorted/trim.{region}.bam'
+    output:
+        'output/fingerprint/multibamsummary/{sample_a}_{sample_b}.{region}.summ.npz'
+    params:
+        rep_a_label=lambda wildcards: wildcards['sample_a'],
+        rep_b_label=lambda wildcards: wildcards['sample_b']
+    shell:'''
+    multiBamSummary bins --bamfiles {input.rep_a} {input.rep_b} \
+    --labels {params.rep_a_label} {params.rep_b_label} -o {output}
+    '''
+
+
+rule plot_multibam_summaries:
+    input:
+        'output/fingerprint/multibamsummary/{sample_a}_{sample_b}.{region}.summ.npz'
+    output:
+        'output/fingerprint/plots/multibamsummary/{sample_a}.{sample_b}.{region}.png',
+        no_outliers='output/fingerprint/plots/multibamsummary/{sample_a}.{sample_b}.{region}.no.outlier.png'
+    params:
+        rep_a_label=lambda wildcards: wildcards['sample_a'],
+        rep_b_label=lambda wildcards: wildcards['sample_b']
+    shell:'''
+    plotCorrelation --corData {input} --corMethod pearson \
+    --whatToPlot scatterplot -o {output}
+    plotCorrelation --corData {input} --corMethod pearson \
+    --whatToPlot scatterplot --removeOutliers -o {output.no_outliers}
+    '''
+
 
 rule multibigwigcompare:
     conda:
@@ -65,6 +98,7 @@ rule multibigwigcompare:
     mkdir -p output/fingerprint
     multiBigwigSummary bins --smartLabels -b {input.normal} {input.swapped} -o {output}
     '''
+
 
 
 rule compute_matrix:
@@ -112,6 +146,16 @@ rule plot_profile_single_sample:
     '''
 
 
+rule sort_big_awk_output:
+    input:
+        'output/{sample}/reorient_alignments/{mode}/bigawk.sorted.trim.{region}.bed'
+    output:
+        'output/{sample}/reorient_alignments/{mode}/bigawk.sorted.trim.{region}.sorted_awk.bed'
+    shell:'''
+    sort -k 1,1 -k2,2n {input} > {output}
+    '''
+
+
 rule coverage_reorriented_reads_over_genes:
     # calculate histograms of gene coverage for reorriented reads
     # doing this as the metaplots of called reads show much greater
@@ -119,18 +163,38 @@ rule coverage_reorriented_reads_over_genes:
     conda:
         '../envs/bedtools.yml'
     input:
-        bed='output/{sample}/reorient_alignments/{mode}/bigawk.sorted.trim.{region}.bed',
+        bed='output/{sample}/reorient_alignments/{mode}/bigawk.sorted.trim.{region}.sorted_awk.bed',
         genes='rawdata/hg19/hg19_apprisplus.bed'
     output:
         hist='output/fingerprint/bed_coverage_genes/{sample}.{mode}.{region}.genes.coverage.hist.bed',
-        sort_bed=temp('output/{sample}/reorient_alignments/{mode}/bigawk.sorted.trim.{region}.sorted.bed')
     params:
         out_dir = 'output/fingerprint/bed_coverage_genes'
     shell:'''
     mkdir -p {params.out_dir}
-    bedtools sort -i {input.bed} > {output.sort_bed}
-    bedtools coverage -sorted -hist -s -a {input.genes} -b {output.sort_bed}
+    bedtools coverage -sorted -hist -s -a {input.genes} -b {input.bed} > {output.hist}
     '''
+
+rule intersect_reorriented_reads_over_genes:
+
+    # this will be better for plotting actually just need to get the number
+    # of reads for each sample. The first line will be the number of reads
+    # for that sample
+    conda:
+        '../envs/bedtools.yml'
+    input:
+        bed='output/{sample}/reorient_alignments/{mode}/bigawk.sorted.trim.{region}.sorted_awk.bed',
+        genes='rawdata/hg19/hg19_apprisplus.bed'
+    output:
+        intersect='output/fingerprint/bed_intersect_genes/{sample}.{mode}.{region}.genes.intersect.count.bed',
+    params:
+        out_dir = 'output/fingerprint/bed_intersect_genes'
+    shell:'''
+    mkdir -p {params.out_dir}
+    wc -l {input.bed} > {output.intersect}
+    bedtools intersect -sorted -c -s -a {input.genes} -b {input.bed} >> {output.intersect}
+    '''
+
+
 
 
 rule plot_profile:
