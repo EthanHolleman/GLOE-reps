@@ -87,19 +87,18 @@ rule add_strand_to_summits_fwd_average_sample:
     input:
         'output/call_peaks/{peak_call_method}/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2/{mode}/{region}/fwd/macs2_peak_call_summits.bed'
     output:
-        temp('output/call_peaks/{peak_call_method}/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2/{mode}/{region}/fwd/macs2_peak_call_summits.strand.bed')
+        'output/call_peaks/{peak_call_method}/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2/{mode}/{region}/fwd/macs2_peak_call_summits.strand.bed'
     shell:'''
     awk '{{print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t""+"}}' {input} > {output}
     '''
-
 
 rule add_strand_to_summits_rev_average_sample:
     input:
         'output/call_peaks/{peak_call_method}/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2/{mode}/{region}/rev/macs2_peak_call_summits.bed'
     output:
-        temp('output/call_peaks/{peak_call_method}/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2/{mode}/{region}/rev/macs2_peak_call_summits.strand.bed')
+        'output/call_peaks/{peak_call_method}/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2/{mode}/{region}/rev/macs2_peak_call_summits.strand.bed'
     shell:'''
-    awk '{{print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t""-"}}' {input} > {output}
+    awk '{{print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t""+"}}' {input} > {output}
     '''
 
 
@@ -114,11 +113,11 @@ rule peaks_stranded_all_average_sample:
     '''
 
 
-rule course_annotate_peaks_average_sample:
+rule coarse_annotate_peaks_average_sample:
     input:
         'output/call_peaks/{peak_call_method}/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2.{mode}.{region}.macs2_peak_call_summits.strand.all.bed'
     output:
-        'output/call_peaks/{peak_call_method}/annotate/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}.{mode}.{region}.anno.all.tsv'
+        'output/call_peaks/{peak_call_method}/annotate/{sample_a}_{sample_b}.{sample_c}_{sample_d}.{mode}.{region}.anno.all.tsv'
     params:
         out_dir='output/call_peaks/{peak_call_method}/annotate'
     shell:'''
@@ -131,8 +130,8 @@ rule plot_course_annotation_average_sample:
     conda:
         '../envs/R.yml'
     input:
-        normal='output/call_peaks/normal/annotate/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}.{mode}.{region}.anno.all.tsv',
-        swapped='output/call_peaks/swapped/annotate/{sample_c}_{sample_d}.vs.{sample_a}_{sample_b}.{mode}.{region}.anno.all.tsv'
+        normal='output/call_peaks/normal/annotate/{sample_a}_{sample_b}.{sample_c}_{sample_d}.{mode}.{region}.anno.all.tsv',
+        swapped='output/call_peaks/swapped/annotate/{sample_c}_{sample_d}.{sample_b}_{sample_a}.{mode}.{region}.anno.all.tsv'
     output:
         'output/call_peaks/plots/{sample_a}_{sample_b}.{sample_c}_{sample_d}.{mode}.{region}.anno.all.png'
     params:
