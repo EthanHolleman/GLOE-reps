@@ -1,6 +1,7 @@
 library(tidyr)
 library(ggplot2)
 library(ggpubr)
+library(cluster)
 
 read_meta_bed <- function(bed.path){
   
@@ -18,9 +19,17 @@ read_meta_bed <- function(bed.path){
 metaplot <- function(bed.df){
   
   plt <- ggplot(bed.df, aes(x=index, y=score)) + 
-    geom_smooth() + theme_pubr() + labs(x='Percent gene body') +
-    ylim(min(bed.df$score), max(bed.df$score))
+    geom_point(size=1, alpha=0.5, color='dodgerblue')  + labs(x='Percent gene body') +
+    ylim(min(bed.df$score), max(bed.df$score)) + theme_pubr()
   plt
+}
+
+clustering <- function(bed.df){
+  # cluster genes by there nicks
+  
+
+
+
 }
 
 

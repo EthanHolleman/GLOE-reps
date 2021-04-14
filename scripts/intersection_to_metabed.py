@@ -64,6 +64,7 @@ def make_gene_intersections(intersect_df, gene_coords_df, pool, number_bins=100)
     print('made args')
     
     results = pool.starmap(bin_gene_intersections, args)
+
     return results
     
     
@@ -74,20 +75,27 @@ def bin_gene_intersections(gene_intersect_df, gene_chr, gene_start, gene_end,
     bin_signal_df = pd.DataFrame(
         columns=('chr', 'bin_start', 'bin_end', 'name', 'signal', 'strand')
         )
+    # define the regions for each bin
     bins = [
         (gene_start + (bin_index * bin_size), 
         gene_start + ((bin_index + 1) * bin_size)
         ) 
         for bin_index in range(number_bins)]
+    # make sure bins end at the end of the gene
+    
+    bins[-1] = (gene_end-bin_size, gene_end)
+    
+    assert bins[0][0] == gene_start
+    assert bins[-1][-1] == gene_end
 
 
-    bins[len(bins)-1] = (bins[len(bins)-1][0], gene_end)
     bin_counter = 0
     for bin_start, bin_end in bins:
+        assert bin_start < bin_end, 'Bin started before it ended'
         intersecting_bin = gene_intersect_df.loc[
             (gene_intersect_df[7] >= bin_start) & (gene_intersect_df[8] <= bin_end)
             ]
-        intersecting_bin_signal = sum(intersecting_bin[len(intersecting_bin.columns)-1])
+        intersecting_bin_signal = sum(intersecting_bin[len(intersecting_bin.columns)-2])
 
         # the index of the bin is dependent on the strand, if fwd strand no
         # change. If reverse strand then the gene actually starts at the "end"
@@ -105,6 +113,7 @@ def bin_gene_intersections(gene_intersect_df, gene_chr, gene_start, gene_end,
     assert bin_signal_df['bin_start'][0] == gene_start, 'Gene start does not match bin start'
     assert bin_signal_df['bin_end'][len(bin_signal_df.index)-1] == gene_end
     assert len(bin_signal_df.index) == number_bins
+    print(gene_name)
     return bin_signal_df
 
 
