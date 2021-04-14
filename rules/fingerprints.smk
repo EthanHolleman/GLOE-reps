@@ -17,6 +17,7 @@ rule index_bam:
     samtools index {input} {output}
     '''
 
+
 rule sort_stranded_summits:
     conda: 
         '../envs/bedtools.yml'
@@ -29,27 +30,27 @@ rule sort_stranded_summits:
     '''
 
 
-rule peak_called_bam_to_bedgraph:
-    input:
-        'output/call_peaks/{peak_call_method}/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2.{mode}.{region}.macs2_peak_call_summits.{strand}.all.sorted.bed'
-    output:
-        'output/call_peaks/{peak_call_method}/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2.{mode}.{region}.macs2_peak_call_summits.{strand}.all.sorted.bedgraph'
-    shell:'''
-    cut -f 1,2,3,5 {input} > {output} && [[ -s {output} ]]
-    '''
+# rule peak_called_bam_to_bedgraph:
+#     input:
+#         'output/call_peaks/{peak_call_method}/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2.{mode}.{region}.macs2_peak_call_summits.{strand}.all.sorted.bed'
+#     output:
+#         'output/call_peaks/{peak_call_method}/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2.{mode}.{region}.macs2_peak_call_summits.{strand}.all.sorted.bedgraph'
+#     shell:'''
+#     cut -f 1,2,3,5 {input} > {output} && [[ -s {output} ]]
+#     '''
 
 
-rule peak_called_bedgraph_to_bigwig:
-    conda:
-        '../envs/ucsc.yml'
-    input:
-        bedgraph='output/call_peaks/{peak_call_method}/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2.{mode}.{region}.macs2_peak_call_summits.{strand}.all.sorted.bedgraph',
-        chromSizes='rawdata/hg19/hg19.chrom.sizes'
-    output:
-        'output/call_peaks/{peak_call_method}/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2.{mode}.{region}.macs2_peak_call_summits.{strand}.all.sorted.bw'
-    shell:'''
-    bedGraphToBigWig {input.bedgraph} {input.chromSizes} {output} && [[ -s {output} ]]
-    '''
+# rule peak_called_bedgraph_to_bigwig:
+#     conda:
+#         '../envs/ucsc.yml'
+#     input:
+#         bedgraph='output/call_peaks/{peak_call_method}/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2.{mode}.{region}.macs2_peak_call_summits.{strand}.all.sorted.bedgraph',
+#         chromSizes='rawdata/hg19/hg19.chrom.sizes'
+#     output:
+#         'output/call_peaks/{peak_call_method}/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2.{mode}.{region}.macs2_peak_call_summits.{strand}.all.sorted.bw'
+#     shell:'''
+#     bedGraphToBigWig {input.bedgraph} {input.chromSizes} {output} && [[ -s {output} ]]
+#     '''
 
 
 rule multibigwigcompare:
@@ -72,13 +73,63 @@ rule compute_matrix:
     input:
         normal='output/call_peaks/normal/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2.{mode}.{region}.macs2_peak_call_summits.{strand}.all.sorted.bw',
         swapped='output/call_peaks/swapped/{sample_c}_{sample_d}.vs.{sample_a}_{sample_b}_macs2.{mode}.{region}.macs2_peak_call_summits.{strand}.all.sorted.bw',
-        genes=''
+        genes='rawdata/hg19/hg19_apprisplus.{strand}.bed'
     threads: 12
     output:
         'output/call_peaks/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}_macs2.{mode}.{region}.macs2_peak_call_summits.{strand}.all.sorted.matrix.gz'
     shell:'''
-    computeMatrix scale regions -p {threads} -S {input.normal} {input.swapped} \
-    -R {input.genes} {} -o {output}
+    computeMatrix scale-regions -p {threads} -S {input.normal} {input.swapped} \
+    -R {input.genes} -o {output}
+    '''
+
+
+rule compute_matrix_aligned_reads:
+    conda:
+        '../envs/deeptools.yml'
+    input:
+        bigwig='output/{sample}/reorient_alignments/{mode}/bigawk.sorted.trim.{region}.coverage.bw',
+        genes='/home/ethollem/projects/GLOE-reps/rawdata/hg19/hg19_apprisplus.bed'
+    threads: 2
+    output:
+        'output/fingerprint/matrix/{sample}.{mode}.{region}.genes.matrix.gz'
+    shell:'''
+    computeMatrix scale-regions -p {threads} -S {input.bigwig} \
+    -R {input.genes} -o {output}
+    '''
+
+
+rule plot_profile_single_sample:
+    conda:
+        '../envs/deeptools.yml'
+    input:
+        'output/fingerprint/matrix/{sample}.{mode}.{region}.{profile_type}.matrix.gz'
+    output:
+        'output/fingerprints/plots/{sample}.{mode}.{region}.profile.{profile_type}.png'
+    params:
+        sample=lambda wildcards: wildcards['sample']
+    shell:'''
+    plotProfile -m {input} -o {output} --averageType mean --sampleLabel {params.sample}
+    '''
+
+
+rule coverage_reorriented_reads_over_genes:
+    # calculate histograms of gene coverage for reorriented reads
+    # doing this as the metaplots of called reads show much greater
+    # signal in genes for revese calling 
+    conda:
+        '../envs/bedtools.yml'
+    input:
+        bed='output/{sample}/reorient_alignments/{mode}/bigawk.sorted.trim.{region}.bed',
+        genes='rawdata/hg19/hg19_apprisplus.bed'
+    output:
+        hist='output/fingerprint/bed_coverage_genes/{sample}.{mode}.{region}.genes.coverage.hist.bed',
+        sort_bed=temp('output/{sample}/reorient_alignments/{mode}/bigawk.sorted.trim.{region}.sorted.bed')
+    params:
+        out_dir = 'output/fingerprint/bed_coverage_genes'
+    shell:'''
+    mkdir -p {params.out_dir}
+    bedtools sort -i {input.bed} > {output.sort_bed}
+    bedtools coverage -sorted -hist -s -a {input.genes} -b {output.sort_bed}
     '''
 
 
@@ -90,7 +141,7 @@ rule plot_profile:
     output:
         'output/fingerprint/plots/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}.{mode}.{region}.{strand}.profile.png'
     shell:'''
-    plotProfile -m {input} {output} --averageType mean
+    plotProfile -m {input} -o {output} --averageType mean --samplesLabel normal reversed
     '''
 
 
