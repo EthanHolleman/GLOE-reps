@@ -3,8 +3,8 @@ __default__:
   nodes: 1
   cpus: "{threads}"
   name: "{rule}.{wildcards}"
-  output: "Logs/{rule}.{wildcards}.out"
-  time: "5-0"
+  output: "logs/{rule}.{wildcards}.out"
+  time: "4-0"
   email: 'etholleman@ucdavis.edu'
   mem: "16000"
 
@@ -37,4 +37,14 @@ call_peaks:
 sort_bedgraph:
   mem: "64000"
   time: "1-0"
+
+coverage_reorriented_reads_over_genes:
+  mem: "100000"
+  partition: "bigmemh"
+
+sort_big_awk_output:
+  mem: "100000"
+  partition: "bigmemh"
+
+
   
