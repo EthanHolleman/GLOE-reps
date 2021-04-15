@@ -187,14 +187,17 @@ rule intersect_reorriented_reads_over_genes:
     output:
         intersect='output/fingerprint/bed_intersect_genes/{sample}.{mode}.{region}.genes.intersect.count.bed',
     params:
-        out_dir = 'output/fingerprint/bed_intersect_genes'
+        out_dir = 'output/fingerprint/bed_intersect_genes',
+        sample_name = lambda wildcards: wildcards.sample,
+        group = lambda wildcards: GLOE_SAMPLES.loc[wildcards.sample_name]['modification']
+
     shell:'''
     mkdir -p {params.out_dir}
     wc -l {input.bed} > {output.intersect}
+    echo "{params.sample_name}" >> {output.intersect}
+    echo "{params.group}" >> {output.intersect}
     bedtools intersect -sorted -c -s -a {input.genes} -b {input.bed} >> {output.intersect}
     '''
-
-
 
 
 rule plot_profile:
