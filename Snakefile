@@ -10,13 +10,21 @@ include: "rules/remove_okazaki.smk"
 include: "rules/compare_footloop.smk"
 include: "rules/metaplot.smk"
 include: "rules/rfd.smk"
+include: "rules/fingerprints.smk"
+include: "rules/general.smk"
 
 
 
 wildcard_constraints:
     strand="fwd|rev",
     mode="indirect|direct",
-    control="GSM[A-Za-z0-9]+"
+    peak_call_method='normal|swapped',
+    
+    control="GSM[A-Za-z0-9]+",
+    sample_a="GSM[A-Za-z0-9]+",
+    sample_b="GSM[A-Za-z0-9]+",
+    sample_c="GSM[A-Za-z0-9]+",
+    sample_d="GSM[A-Za-z0-9]+"
 
 
 import itertools
@@ -39,6 +47,14 @@ def group_replicates(samples):
 
 
 replicate_groups = group_replicates(GLOE_SAMPLES)
+
+
+
+multibamsummary = expand(
+    'output/fingerprint/multibamsummary/{rep[0]}_{rep[1]}.all.summ.npz',
+    rep=replicate_groups
+)
+
 paired_replicates_boxplot_output = expand(
     'output/compare_replicates/{rep[0]}-{rep[1]}/plots/closest/{mode}/{strand}/boxplot_{region}.png',
     rep=replicate_groups, allow_missing=True
@@ -53,19 +69,6 @@ macs2_peaks = expand(
     allow_missing=True
 )
 
-
-metaplot_metabed_files = expand(
-    'output/metaplot/metabed/{peak_call_method}/{control}.vs._{treatment_a}_{treatment_b}.{mode}.all.{strand}.meta.bed',
-    treatment_a=treatment, treatment_b=treatment, strand=STRANDS, mode=MODES,
-    control=control, peak_call_method=PEAK_CALL_METHODS
-
-)
-
-metaplots = expand(
-    'output/metaplot/plots/{peak_call_method}/{control}.vs._{treatment_a}_{treatment_b}.{mode}.all.{strand}.meta.png',
-    treatment_a=treatment, treatment_b=treatment, strand=STRANDS, mode=MODES,
-    control=control, peak_call_method=PEAK_CALL_METHODS, 
-)
 
 rfd = expand(
     'output/rfd/rfd_bw/{sample}.{mode}.all.1000.rfd.bw',
@@ -90,36 +93,83 @@ all_peaks_stranded_average_swapped = expand(
     sample_d=treatment[::-1], sample_c=treatment
 )
 
-all_peak_stranded_average_plots = expand(
-    'output/call_peaks/plots/{sample_c}_{sample_d}.vs.{sample_a}_{sample_b}.{mode}.all.anno.all.png',
-     zip, sample_a=control, sample_b=control[::-1], mode=MODES,
+intersection_hg19_swapped = expand(
+    expand('output/metaplot/intersect/swapped/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}.{mode}.all.{strand}.intersect.bed', allow_missing=True, strand=STRANDS),
+     zip, sample_a=control, sample_b=control[::-1], mode=MODES, strand=STRANDS,
     sample_d=treatment[::-1], sample_c=treatment
 )
 
 
+intersection_hg19_normal = expand(
+    expand('output/metaplot/intersect/normal/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}.{mode}.all.{strand}.intersect.bed', allow_missing=True, strand=STRANDS),
+    zip, sample_a=treatment, sample_b=treatment[::-1], mode=MODES, strand=STRANDS,
+    sample_d=control[::-1], sample_c=control
+)
+
+
+metaplot_metabed_files_normal = expand(
+    expand('output/metaplot/metabed/normal/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}.{mode}.all.{strand}.meta.bed', strand=STRANDS, allow_missing=True),
+    zip, sample_a=treatment, sample_b=treatment[::-1], mode=MODES, strand=STRANDS,
+    sample_d=control[::-1], sample_c=control
+)
+
+metaplot_metabed_files_swapped = expand(
+    expand('output/metaplot/metabed/swapped/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}.{mode}.all.{strand}.meta.bed', allow_missing=True, strand=STRANDS),
+    zip, sample_a=control, sample_b=control[::-1], mode=MODES, strand=STRANDS,
+    sample_d=treatment[::-1], sample_c=treatment
+)
+
+
+# metaplots_normal = expand(
+#     'output/metaplot/metabed/normal/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}.{mode}.all.{strand}.meta.bed',
+#     zip, sample_a=treatment, sample_b=treatment[::-1], mode=MODES, strand=STRANDS,
+#     sample_d=control[::-1], sample_c=control
+# )
+
+# metaplots_swapped = expand(
+#     'output/metaplot/plots/swapped/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}.{mode}.all.all.meta.png',
+#     zip, sample_a=control, sample_b=control[::-1], mode=MODES, strand=STRANDS,
+#     sample_d=treatment[::-1], sample_c=treatment
+# )
+
+
+# all_peak_stranded_average_plots = expand(
+#     'output/call_peaks/plots/{sample_c}_{sample_d}.{sample_a}_{sample_b}.{mode}.all.anno.all.png',
+#     zip, sample_a=control, sample_b=control[::-1], mode=MODES,
+#     sample_d=treatment[::-1], sample_c=treatment
+# )
+
+# plot_correlation = expand(
+#     expand('output/fingerprint/plots/{sample_a}_{sample_b}.{sample_c}_{sample_d}.{mode}.all.{strand}.correlation.png',allow_missing=True, strand=STRANDS),
+#     zip, sample_a=treatment, sample_b=treatment[::-1], mode=MODES, strand=STRANDS,
+#     sample_d=control[::-1], sample_c=control
+# )
+
+plot_profiles = expand(
+    expand('output/fingerprint/plots/{sample_a}_{sample_b}.vs.{sample_c}_{sample_d}.{mode}.all.{strand}.profile.png',allow_missing=True, strand=STRANDS),
+    zip, sample_a=treatment, sample_b=treatment[::-1], mode=MODES, strand=STRANDS,
+    sample_d=control[::-1], sample_c=control
+)
+
+plot_aligned_reads_profiles = expand(
+    'output/fingerprints/plots/{sample}.{mode}.all.profile.{profile_type}.png',
+    sample=(treatment + control), mode=MODES, profile_type='genes'
+)
+
+coverage_oriented_reads_genes = expand(
+    'output/fingerprint/bed_coverage_genes/{sample}.{mode}.all.genes.coverage.hist.bed',
+    sample=(treatment + control), mode=MODES)
+
+
+
+print(coverage_oriented_reads_genes)
+
+
+
+
 rule all:
     input:
-        #macs2_peaks_swap,
-        #macs2_peaks,
-        #closest_footloops_swapped_peaks,
-        #closest_footloops_swapped_peaks_plots
-        #metaplot_intersection_files
-        #metaplot_metabed_files
-        #metaplots
-        #rfd
-        #all_peaks_stranded
-        #plot_annotations,
-        #test_chipseeker,
-        all_peaks_stranded_average_swapped,
-        all_peaks_stranded_average_normal,
-        all_peak_stranded_average_plots
-        #closest_footloops_swapped_peaks_multi_treatment
-        #ok_free_bed_files
-        #"1"
-        # expand(
-        #     'output/{sample}/depth/{mode}/bam/{region}.{strand}.sorted.bam',
-        #     sample=treatment, mode=MODES, region=REGIONS, strand=STRANDS
-        # )
-
+        multibamsummary,
+        coverage_oriented_reads_genes
 
 
